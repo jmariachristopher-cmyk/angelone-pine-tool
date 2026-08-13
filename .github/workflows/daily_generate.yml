@@ -1,0 +1,59 @@
+name: Daily Pine Script Generator
+
+on:
+  schedule:
+    - cron: "46 3 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      symbol:
+        description: "Underlying symbol"
+        required: false
+        default: "NIFTY"
+      expiry:
+        description: "Expiry, exact Angel One format e.g. 26JUN2025"
+        required: true
+      step:
+        description: "Strike spacing"
+        required: false
+        default: "50"
+      n_each_side:
+        description: "Strikes above/below ATM"
+        required: false
+        default: "10"
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run generator
+        env:
+          ANGEL_API_KEY: ${{ secrets.ANGEL_API_KEY }}
+          ANGEL_CLIENT_ID: ${{ secrets.ANGEL_CLIENT_ID }}
+          ANGEL_PASSWORD: ${{ secrets.ANGEL_PASSWORD }}
+          ANGEL_TOTP_SECRET: ${{ secrets.ANGEL_TOTP_SECRET }}
+        run: |
+          python scripts/run_daily.py \
+            --symbol "${{ github.event.inputs.symbol || vars.DEFAULT_SYMBOL || 'NIFTY' }}" \
+            --expiry "${{ github.event.inputs.expiry || vars.DEFAULT_EXPIRY }}" \
+            --step "${{ github.event.inputs.step || vars.DEFAULT_STEP || '50' }}" \
+            --n_each_side "${{ github.event.inputs.n_each_side || vars.DEFAULT_N_EACH_SIDE || '10' }}"
+
+      - name: Commit updated data files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git diff --staged --quiet || git commit -m "Auto-update reversal zones $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git push
