@@ -3,3 +3,5 @@ pyotp
 requests
 streamlit
 pandas
+ logzero
+websocket-client
