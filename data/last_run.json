@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-08-18T01:37:04.720255",
+  "generated_at": "2026-08-18T04:19:31.171440",
   "symbol": "NIFTY",
   "expiry": "18AUG2026",
-  "spot": 24287.65,
-  "atm": 24300.0,
+  "spot": 24229.15,
+  "atm": 24250.0,
   "strike_count": 21
 }
